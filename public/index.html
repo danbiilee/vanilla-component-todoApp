@@ -15,33 +15,30 @@
   <body>
     <main>
       <header class="header">
-        <h1 class="header__title">TO DO</h1>
-        <button class="btn blue toggle" title="할 일 추가하기">
-          <svg
-            class="black"
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-          >
-            <path d="M24 10h-10v-10h-4v10h-10v4h10v10h4v-10h10z" />
-          </svg>
-        </button>
-      </header>
-      <section class="add-section">
-        <div class="border-container">
-          <textarea
-            class="add-section__txtarea"
-            name=""
-            cols="30"
-            rows="10"
-          ></textarea>
-          <div class="add-section__buttons">
-            <button class="btn toggle">취소</button>
-            <button class="btn add">추가하기</button>
-          </div>
+        <div class="header__inner">
+          <h1 class="header__inner__title">TO DO</h1>
+          <button class="btn blue toggle" title="할 일 추가하기">
+            <svg
+              class="black"
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+            >
+              <path d="M24 10h-10v-10h-4v10h-10v4h10v10h4v-10h10z" />
+            </svg>
+          </button>
         </div>
-      </section>
+        <section class="add-section">
+          <div class="border-container">
+            <input class="add-section__input" name="title" />
+            <div class="add-section__buttons">
+              <button class="btn toggle">취소</button>
+              <button class="btn add">추가하기</button>
+            </div>
+          </div>
+        </section>
+      </header>
       <section class="main-section">
         <!-- Counter: Active -->
         <div class="todos-counter active">

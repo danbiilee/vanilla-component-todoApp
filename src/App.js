@@ -1,269 +1,167 @@
 import * as api from '@db/localStorage';
-import { handleError, throwError, defaultPromise } from '@utils';
+import AddTodo from '@components/AddTodo';
+import TodoItem from '@components/TodoItem';
 
-// 데이터 로드
-const loadData = async () => {
-  const [todosError, todos] = await handleError(api.getTodos());
-  if (todosError) {
-    throwError('할 일 목록 조회');
-  }
+export default class App {
+	element;
+	state;
 
-  // 카테고리별 조회
-  const incompleteTodos = todos ? todos.filter(todo => !todo.complete) : [];
-  const completeTodos = todos ? todos.filter(todo => todo.complete) : [];
+	constructor() {
+		this.element = document.querySelector('.todos');
+		this.state = api.getTodos() ?? [];
 
-  // 개수 셋팅
-  const incompleteCnt = document.querySelector('.active .todos-counter__cnt');
-  const completeCnt = document.querySelector('.complete .todos-counter__cnt');
-  incompleteCnt.innerHTML = incompleteTodos.length;
-  completeCnt.innerHTML = completeTodos.length;
+		this.setEventListener();
+		new AddTodo({ onAddTodo: this.onAddTodo.bind(this) });
+	}
 
-  // 리스트 셋팅
-  const ul = document.querySelector('.todos');
-  ul.innerHTML = incompleteTodos
-    .concat(completeTodos)
-    .map(todo => getElementByText(todo))
-    .join('');
+	render() {
+		// 카테고리별 카운트 셋팅
+		const activeTodos = this.state.filter(todo => !todo.complete);
+		const completeTodos = this.state.filter(todo => todo.complete);
+		const activeCnt = document.querySelector('.active .todos-counter__cnt');
+		const completeCnt = document.querySelector('.complete .todos-counter__cnt');
+		activeCnt.innerHTML = activeTodos.length;
+		completeCnt.innerHTML = completeTodos.length;
 
-  return defaultPromise;
-};
+		// 리스트 셋팅
+		this.element.innerHTML = '';
+		activeTodos.concat(completeTodos).forEach(todo => {
+			new TodoItem({
+				parent: this.element,
+				todo,
+				onChange: this.onPressEditInput.bind(this),
+			});
+		});
+	}
 
-// li 요소 동적 생성
-const getElementByText = todo => {
-  return `<li class="todo ${todo.id} ${
-    todo.complete ? 'complete' : 'incomplete'
-  } " data-id="${todo.id}">
-    <button class="btn check" data-id="${todo.id}" title="완료여부 체크하기">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
-        ${
-          todo.complete
-            ? '<path d="M19 0h-14c-2.762 0-5 2.239-5 5v14c0 2.761 2.238 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-8.959 17l-4.5-4.319 1.395-1.435 3.08 2.937 7.021-7.183 1.422 1.409-8.418 8.591z" />'
-            : '<path d="M5 2c-1.654 0-3 1.346-3 3v14c0 1.654 1.346 3 3 3h14c1.654 0 3-1.346 3-3v-14c0-1.654-1.346-3-3-3h-14zm19 3v14c0 2.761-2.238 5-5 5h-14c-2.762 0-5-2.239-5-5v-14c0-2.761 2.238-5 5-5h14c2.762 0 5 2.239 5 5z" />'
-        }
-      </svg>
-    </button>
-    <span class="title">${todo.title}</span>
-    <input class="input" value=${todo.title} />
-    <div class="todo__buttons">
-      <button class="btn edit${todo.complete ? ' gray' : ''}" data-id="${
-    todo.id
-  }" title="수정하기">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-          <path d="M18.363 8.464l1.433 1.431-12.67 12.669-7.125 1.436 1.439-7.127 12.665-12.668 1.431 1.431-12.255 12.224-.726 3.584 3.584-.723 12.224-12.257zm-.056-8.464l-2.815 2.817 5.691 5.692 2.817-2.821-5.693-5.688zm-12.318 18.718l11.313-11.316-.705-.707-11.313 11.314.705.709z" />
-        </svg>
-      </button>
-      <button class="btn delete${todo.complete ? ' gray' : ''}" data-id="${
-    todo.id
-  }" title="삭제하기">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-          <path d="M9 19c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm4 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm4 0c0 .552-.448 1-1 1s-1-.448-1-1v-10c0-.552.448-1 1-1s1 .448 1 1v10zm5-17v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.315c0 .901.73 2 1.631 2h5.712zm-3 4v16h-14v-16h-2v18h18v-18h-2z" />
-        </svg>
-      </button>
-    </div>
-  </li>`;
-};
+	setState(newState) {
+		this.state = newState;
+	}
 
-// 할 일 추가 영역 토글
-const onToggleAddTodo = () => {
-  const main = document.querySelector('main');
-  const txtarea = document.querySelector('.add-section__txtarea');
+	setEventListener() {
+		this.element.addEventListener('click', this.onToggleCheck.bind(this)); // 완료 여부 토글
+		this.element.addEventListener('click', this.onDeleteTodo.bind(this)); // 할 일 하나 삭제
+		this.element.addEventListener('click', this.onClickEditButton.bind(this)); // 타이틀 수정
 
-  main.classList.toggle('add-on');
-  txtarea.value = '';
-  if (main.className.includes('add-on')) {
-    txtarea.focus();
-  }
-};
+		const toggleComplete = document.querySelector(
+			'.complete .todos-counter__title'
+		);
+		toggleComplete.addEventListener(
+			'click',
+			this.onToggleCompleteTodos.bind(this)
+		); // 완료된 할 일 보이기
 
-// 할 일 추가
-const onClickAddTodo = async () => {
-  const [todosError, todos] = await handleError(api.getTodos());
-  if (todosError) {
-    throwError('할 일 목록 조회');
-  }
+		const delAllBtn = document.querySelector('.btn.delete-all');
+		delAllBtn.addEventListener('click', this.onDeleteCompleteTodos.bind(this)); // 완료된 할 일 전체 삭제
+	}
 
-  const title = document.querySelector('.add-section__txtarea');
-  if (!title.value) {
-    alert('⚠ 할 일을 입력해주세요 ⚠');
-    title.focus();
-    return;
-  }
+	onPressEditInput({ key, target }) {
+		if (key !== 'Escape' && key !== 'Enter') {
+			return;
+		}
 
-  // id: Max 값 찾기
-  let id;
-  if (todos == null) {
-    id = 0;
-  } else {
-    id = todos.reduce((prev, cur) => {
-      return Math.max(prev, cur.id);
-    }, 0);
-  }
+		const liElement = target.closest('.todo');
+		const id = parseInt(liElement.dataset.id, 10);
 
-  // 새 객체 생성
-  const newTodo = {
-    id: ++id,
-    title: title.value,
-    complete: false,
-  };
+		if (key === 'Escape') {
+			target.value = this.state.find(todo => todo.id === id).title;
+		} else if (key === 'Enter') {
+			this.onChangeTitle({
+				id,
+				title: target.value,
+			});
+		}
 
-  const [resultError, result] = await handleError(api.addTodo(todos, newTodo));
-  if (resultError) {
-    throwError('할 일 추가');
-  }
+		liElement.classList.toggle('edit-on');
+	}
 
-  if (result) {
-    onToggleAddTodo(); // 추가 영역 토글
-    handleLoadPromise(); // 리로드
-  }
-};
+	onClickEditButton({ target }) {
+		const button = target.closest('.btn.edit');
+		if (!button) {
+			return;
+		}
 
-// 완료 여부 토글
-const onToggleCheck = async e => {
-  const checkBtn = e.target.closest('.btn.check');
-  if (!checkBtn) {
-    return;
-  }
+		const liElement = target.closest('.todo');
+		const inputElement = liElement.querySelector('.todo__input');
 
-  const [resultError, result] = await handleError(
-    api.toggleTodo(parseInt(checkBtn.dataset.id, 10))
-  );
-  if (resultError) {
-    throwError('완료 여부 변경');
-  }
+		liElement.classList.toggle('edit-on');
 
-  if (result) {
-    handleLoadPromise(); // 리로드
-  }
-};
+		// 타이틀 수정 영역 보이기
+		if (liElement.className.includes('edit-on')) {
+			inputElement.focus();
+			return;
+		}
 
-// 완료된 할 일 보이기
-const onToggleCompleteTodos = () => {
-  const todos = document.querySelector('.todos');
-  todos.classList.toggle('display');
-};
+		// 타이틀 변경
+		this.onChangeTitle({
+			id: parseInt(liElement.dataset.id, 10),
+			title: inputElement.value,
+		});
+	}
 
-// 아이템 하나 삭제
-const onDeleteTodo = async e => {
-  const delBtn = e.target.closest('.btn.delete');
-  if (!delBtn) {
-    return;
-  }
+	onChangeTitle({ id, title }) {
+		// 비교
+		const diff = this.state.find(todo => todo.id === id).title === title;
+		if (diff) {
+			return;
+		}
 
-  const [resultError, result] = await handleError(
-    api.deleteTodo(parseInt(delBtn.dataset.id, 10))
-  );
-  if (resultError) {
-    throwError('할 일 삭제');
-  }
+		// 이전 값과 다를 때만 변경
+		this.setState(api.editTodo({ id, title }));
+		this.render();
+	}
 
-  if (result) {
-    handleLoadPromise(); // 리로드
-  }
-};
+	onDeleteTodo({ target }) {
+		const button = target.closest('.btn.delete');
+		if (!button) {
+			return;
+		}
 
-// 완료 아이템 전부 삭제
-const onDeleteCompletedTodos = async () => {
-  const [resultError, result] = await handleError(api.deleteCompletedTodos());
-  if (resultError) {
-    throwError('완료된 할 일 전부 삭제');
-  }
-  if (result) {
-    handleLoadPromise(); // 리로드
-  }
-};
+		const liElement = target.closest('.todo');
+		this.setState(api.deleteTodo(parseInt(liElement.dataset.id, 10)));
+		this.render();
+	}
 
-// 타이틀 수정 영역 보이기
-const handleEdit = async e => {
-  const editBtn = e.target.closest('.btn.edit');
-  if (!editBtn) {
-    return;
-  }
+	onDeleteCompleteTodos() {
+		this.setState(api.deleteCompleteTodos());
+		this.render();
+	}
 
-  const todo = document.querySelector(`.todo[data-id="${editBtn.dataset.id}"]`);
-  const title = document.querySelector(
-    `.todo[data-id="${editBtn.dataset.id}"] .title`
-  );
-  const input = document.querySelector(
-    `.todo[data-id="${editBtn.dataset.id}"] .input`
-  );
+	onToggleCompleteTodos() {
+		this.element.classList.toggle('display');
+	}
 
-  todo.classList.toggle('edit-on');
+	onToggleCheck({ target }) {
+		const button = target.closest('.btn.check');
+		if (!button) {
+			return;
+		}
 
-  // 타이틀 수정 영역 보이기
-  if (todo.className.includes('edit-on')) {
-    input.value = title.innerHTML;
-    input.focus();
-    return;
-  }
+		const liElement = target.closest('.todo');
+		this.setState(api.toggleTodo(parseInt(liElement.dataset.id, 10)));
+		this.render();
+	}
 
-  // 타이틀 변경
-  const payload = {
-    id: parseInt(editBtn.dataset.id, 10),
-    title: input.value,
-  };
-  changeEdit(payload);
-};
+	onAddTodo({ target, title }) {
+		if (!title) {
+			alert('⚠ 할 일을 입력해주세요 ⚠');
+			target.element.focus();
+			return;
+		}
 
-const changeEdit = async payload => {
-  const { id, title } = payload;
-  const [todosError, todos] = await handleError(api.getTodos());
-  if (todosError) {
-    throwError('할 일 목록 조회');
-  }
+		let id;
+		if (this.state.length > 0) {
+			// id: Max 값 찾기
+			id =
+				this.state.reduce((prev, cur) => {
+					return Math.max(prev, cur.id);
+				}, 0) + 1;
+		} else {
+			id = 0;
+		}
 
-  // 비교
-  const diff = todos.find(todo => todo.id === id).title === title;
-  if (diff) {
-    return;
-  }
-
-  // 이전 값과 다를 때만 변경
-  const [resultError, result] = await handleError(api.editTodo(todos, payload));
-  if (resultError) {
-    throwError('할 일 수정');
-  }
-
-  if (result) {
-    handleLoadPromise(); // 리로드
-  }
-};
-
-// 이벤트 등록
-const setEventListeners = () => {
-  const toggleBtn = document.querySelectorAll('.btn.toggle');
-  const addBtn = document.querySelector('.btn.add');
-  const checkBtn = document.querySelectorAll('.btn.check');
-  const toggleHeader = document.querySelector('.todos-counter.complete');
-  const delBtn = document.querySelectorAll('.btn.delete');
-  const delAllBtn = document.querySelector('.btn.delete-all');
-  const editBtn = document.querySelectorAll('.btn.edit');
-
-  // 할 일 추가 영역 토글
-  toggleBtn.forEach(item => item.addEventListener('click', onToggleAddTodo));
-
-  // 할 일 추가
-  addBtn.addEventListener('click', onClickAddTodo);
-
-  // 완료 여부 토글
-  checkBtn.forEach(item =>
-    item.addEventListener('click', e => onToggleCheck(e))
-  );
-
-  // 완료된 할 일 보이기
-  toggleHeader.addEventListener('click', onToggleCompleteTodos);
-
-  // 아이템 하나 삭제
-  delBtn.forEach(item => item.addEventListener('click', e => onDeleteTodo(e)));
-
-  // 완료 아이템 전체 삭제
-  delAllBtn.addEventListener('click', onDeleteCompletedTodos);
-
-  // 타이틀 수정
-  editBtn.forEach(item => item.addEventListener('click', e => handleEdit(e)));
-};
-
-export const handleLoadPromise = () => {
-  loadData() //
-    .then(setEventListeners)
-    .catch(console.log);
-};
+		target.onToggleAddTodo();
+		this.setState(api.addTodo({ id, title, complete: false }));
+		this.render();
+	}
+}

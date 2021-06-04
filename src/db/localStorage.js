@@ -1,68 +1,45 @@
 import { handleError, throwError, defaultPromise } from '@utils';
 
 export const getTodos = () => {
-  const todos = localStorage.getItem('2Do');
-  return new Promise((resolve, reject) => {
-    resolve(JSON.parse(todos));
-  });
+	const todos = localStorage.getItem('ToDo');
+	return JSON.parse(todos);
 };
 
-export const addTodo = async (todos, payload) => {
-  const initTodos = todos ? todos : []; // 초기화
-  localStorage.setItem('2Do', JSON.stringify(initTodos.concat(payload)));
-  return defaultPromise;
+export const addTodo = payload => {
+	const prevTodos = getTodos() ?? [];
+	const currTodos = prevTodos.concat(payload);
+	localStorage.setItem('ToDo', JSON.stringify(currTodos));
+	return currTodos;
 };
 
-export const toggleTodo = async id => {
-  const [todosError, todos] = await handleError(getTodos());
-  if (todosError) {
-    throwError('할 일 목록 조회');
-  }
-
-  localStorage.setItem(
-    '2Do',
-    JSON.stringify(
-      todos.map(todo =>
-        todo.id === id ? { ...todo, complete: !todo.complete } : todo
-      )
-    )
-  );
-  return defaultPromise;
+export const toggleTodo = id => {
+	const prevTodos = getTodos();
+	const currTodos = prevTodos.map(todo =>
+		todo.id === id ? { ...todo, complete: !todo.complete } : todo
+	);
+	localStorage.setItem('ToDo', JSON.stringify(currTodos));
+	return currTodos;
 };
 
-export const deleteTodo = async id => {
-  const [todosError, todos] = await handleError(getTodos());
-  if (todosError) {
-    throwError('할 일 목록 조회');
-  }
-
-  localStorage.setItem(
-    '2Do',
-    JSON.stringify(todos.filter(todo => todo.id !== id))
-  );
-  return defaultPromise;
+export const deleteTodo = id => {
+	const prevTodos = getTodos();
+	const currTodos = prevTodos.filter(todo => todo.id !== id);
+	localStorage.setItem('ToDo', JSON.stringify(currTodos));
+	return currTodos;
 };
 
-export const deleteCompletedTodos = async () => {
-  const [todosError, todos] = await handleError(getTodos());
-  if (todosError) {
-    throwError('할 일 목록 조회');
-  }
-
-  localStorage.setItem(
-    '2Do',
-    JSON.stringify(todos.filter(todo => !todo.complete))
-  );
-  return defaultPromise;
+export const deleteCompleteTodos = () => {
+	const prevTodos = getTodos();
+	const currTodos = prevTodos.filter(todo => !todo.complete);
+	localStorage.setItem('ToDo', JSON.stringify(currTodos));
+	return currTodos;
 };
 
-export const editTodo = async (todos, payload) => {
-  const { id, title } = payload;
-  localStorage.setItem(
-    '2Do',
-    JSON.stringify(
-      todos.map(todo => (todo.id === id ? { ...todo, title } : todo))
-    )
-  );
-  return defaultPromise;
+export const editTodo = ({ id, title }) => {
+	const prevTodos = getTodos();
+	const currTodos = prevTodos.map(todo =>
+		todo.id === id ? { ...todo, title } : todo
+	);
+	localStorage.setItem('ToDo', currTodos);
+	return currTodos;
 };

@@ -1,13 +1,12 @@
-export default class TodoItem {
-	element;
-	props;
+import BaseComponent from '../utils/BaseComponent';
 
-	constructor(props) {
-		this.props = props;
+export default class TodoItem extends BaseComponent {
+  constructor(props) {
+    super(props);
 
-		const { todo, onChange } = this.props;
-		const template = document.createElement('template');
-		template.innerHTML = `<li class="todo">
+    const { todo, onChange } = this.props;
+    const template = document.createElement('template');
+    template.innerHTML = `<li class="todo">
       <button class="btn check">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
           <path />
@@ -29,36 +28,32 @@ export default class TodoItem {
       </div>
     </li>`;
 
-		this.element = template.content.firstElementChild;
-		this.element.classList.add(todo.complete ? 'complete' : 'incomplete');
-		this.element.dataset.id = todo.id;
+    this.element = template.content.firstElementChild;
+    this.element.classList.add(todo.complete ? 'complete' : 'incomplete');
+    this.element.dataset.id = todo.id;
 
-		const checkPath = this.element.querySelector('.btn.check path');
-		checkPath.setAttribute(
-			'd',
-			todo.complete
-				? 'M19 0h-14c-2.762 0-5 2.239-5 5v14c0 2.761 2.238 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-8.959 17l-4.5-4.319 1.395-1.435 3.08 2.937 7.021-7.183 1.422 1.409-8.418 8.591z'
-				: 'M5 2c-1.654 0-3 1.346-3 3v14c0 1.654 1.346 3 3 3h14c1.654 0 3-1.346 3-3v-14c0-1.654-1.346-3-3-3h-14zm19 3v14c0 2.761-2.238 5-5 5h-14c-2.762 0-5-2.239-5-5v-14c0-2.761 2.238-5 5-5h14c2.762 0 5 2.239 5 5z'
-		);
+    const checkPath = this.element.querySelector('.btn.check path');
+    checkPath.setAttribute(
+      'd',
+      todo.complete
+        ? 'M19 0h-14c-2.762 0-5 2.239-5 5v14c0 2.761 2.238 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-8.959 17l-4.5-4.319 1.395-1.435 3.08 2.937 7.021-7.183 1.422 1.409-8.418 8.591z'
+        : 'M5 2c-1.654 0-3 1.346-3 3v14c0 1.654 1.346 3 3 3h14c1.654 0 3-1.346 3-3v-14c0-1.654-1.346-3-3-3h-14zm19 3v14c0 2.761-2.238 5-5 5h-14c-2.762 0-5-2.239-5-5v-14c0-2.761 2.238-5 5-5h14c2.762 0 5 2.239 5 5z'
+    );
 
-		const titleElement = this.element.querySelector('.todo__title');
-		titleElement.textContent = todo.title;
+    const titleElement = this.element.querySelector('.todo__title');
+    titleElement.textContent = todo.title;
 
-		const inputElement = this.element.querySelector('.todo__input');
-		inputElement.setAttribute('value', todo.title);
-		inputElement.addEventListener('keydown', onChange);
+    const inputElement = this.element.querySelector('.todo__input');
+    inputElement.setAttribute('value', todo.title);
+    inputElement.addEventListener('keydown', onChange);
 
-		const grayButtons = [
-			this.element.querySelector('.btn.edit'),
-			this.element.querySelector('.btn.delete'),
-		];
-		todo.complete &&
-			grayButtons.forEach(button => button.classList.add('gray'));
+    const grayButtons = [
+      this.element.querySelector('.btn.edit'),
+      this.element.querySelector('.btn.delete'),
+    ];
+    todo.complete &&
+      grayButtons.forEach(button => button.classList.add('gray'));
 
-		this.appendTo();
-	}
-
-	appendTo() {
-		this.props.parent.appendChild(this.element);
-	}
+    this.appendTo();
+  }
 }

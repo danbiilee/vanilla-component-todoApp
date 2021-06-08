@@ -1,11 +1,9 @@
+import BaseComponent from '../utils/BaseComponent';
 import CompleteCounter from './CompleteCounter';
 
-export default class CompleteContainer {
-  element;
-  props;
-
+export default class CompleteContainer extends BaseComponent {
   constructor(props) {
-    this.props = props;
+    super(props);
     this.element = document.querySelector('.todos-counter.complete');
     new CompleteCounter({
       parent: this.element,

@@ -3,12 +3,11 @@ import AddTodo from './components/AddTodo';
 import TodoItem from './components/TodoItem';
 import ActiveCounter from './components/ActiveCounter';
 import CompleteContainer from './components/CompleteContainer';
+import BaseComponent from './utils/BaseComponent';
 
-export default class App {
-  element;
-  state;
-
+export default class App extends BaseComponent {
   constructor() {
+    super();
     this.element = document.querySelector('.todos');
     this.state = api.getTodos() ?? [];
     this.setEventListener();
@@ -37,10 +36,6 @@ export default class App {
         onChange: this.onPressEditInput.bind(this),
       });
     });
-  }
-
-  setState(newState) {
-    this.state = newState;
   }
 
   setEventListener() {

@@ -1,52 +1,43 @@
-export default class AddTodo {
-	element;
-	state;
-	props;
+import BaseComponent from '../utils/BaseComponent';
 
-	constructor(props) {
-		this.element = document.querySelector('.add-section__input');
-		this.state = this.element.value;
-		this.props = props;
+export default class AddTodo extends BaseComponent {
+  constructor(props) {
+    super(props);
+    this.element = document.querySelector('.add-section__input');
+    this.state = this.element.value;
+    this.setEventListener();
+  }
 
-		this.setEventListener();
-	}
+  setEventListener() {
+    const toggleBtn = document.querySelectorAll('.btn.toggle');
+    const addBtn = document.querySelector('.btn.add');
 
-	setState(newState) {
-		this.state = newState;
-	}
+    toggleBtn.forEach(item =>
+      item.addEventListener('click', this.onToggleAddTodo.bind(this))
+    );
+    this.element.addEventListener('keyup', this.onChange.bind(this));
+    addBtn.addEventListener('click', this.onChange.bind(this));
+  }
 
-	render() {}
+  onChange({ type, key }) {
+    if (key === 'Escape') {
+      this.onToggleAddTodo();
+      return;
+    }
+    if (key === 'Enter' || type === 'click') {
+      this.setState(this.element.value);
+      this.props.onAddTodo({ target: this, title: this.state });
+    }
+  }
 
-	setEventListener() {
-		const toggleBtn = document.querySelectorAll('.btn.toggle');
-		const addBtn = document.querySelector('.btn.add');
+  onToggleAddTodo() {
+    const main = document.querySelector('main');
 
-		toggleBtn.forEach(item =>
-			item.addEventListener('click', this.onToggleAddTodo.bind(this))
-		);
-		this.element.addEventListener('keyup', this.onChange.bind(this));
-		addBtn.addEventListener('click', this.onChange.bind(this));
-	}
+    this.element.value = '';
+    main.classList.toggle('add-on');
 
-	onChange({ type, key }) {
-		if (key === 'Escape') {
-			this.onToggleAddTodo();
-			return;
-		}
-		if (key === 'Enter' || type === 'click') {
-			this.setState(this.element.value);
-			this.props.onAddTodo({ target: this, title: this.state });
-		}
-	}
-
-	onToggleAddTodo() {
-		const main = document.querySelector('main');
-
-		this.element.value = '';
-		main.classList.toggle('add-on');
-
-		if (main.className.includes('add-on')) {
-			this.element.focus();
-		}
-	}
+    if (main.className.includes('add-on')) {
+      this.element.focus();
+    }
+  }
 }
